@@ -13,7 +13,7 @@ install() {
 	cp -f "$repo"/.ebash/help "$HOME"/.ebash || return 1
 	cp -f "$repo"/.ebash/version "$HOME"/.ebash || return 1
 	# Uncomment if you desire configurables
-	#[[ ! -e "$HOME"/.ebash/.cfg ]] && { cp -f "$repo"/.ebash/.cfg "$HOME"/.ebash/.cfg || return 1; }
+	[[ ! -e "$HOME"/.ebash/.cfg ]] && { cp -f "$repo"/.ebash/.cfg "$HOME"/.ebash/.cfg || return 1; }
 
 	# Comment if you want quiet installation
 	echo "ebash installed!"
