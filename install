@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# ebash's installer
+install() {
+	local repo="$(find "$HOME" -type d -name ebash 2>/dev/null | grep repo)"
+	
+	# Preprocess
+	[[ ! -e "$HOME/.ebash" ]] && mkdir "$HOME/.ebash"
+
+	# Install
+	cp -f "$repo"/ebash "$HOME"/bin || return 1
+	cp -f "$repo"/.ebash/.lib "$HOME"/.ebash || return 1
+	cp -f "$repo"/.ebash/help "$HOME"/.ebash || return 1
+	cp -f "$repo"/.ebash/version "$HOME"/.ebash || return 1
+	# Uncomment if you desire configurables
+	#[[ ! -e "$HOME"/.ebash/.cfg ]] && { cp -f "$repo"/.ebash/.cfg "$HOME"/.ebash/.cfg || return 1; }
+
+	# Comment if you want quiet installation
+	echo "ebash installed!"
+}
+
+install "$@"

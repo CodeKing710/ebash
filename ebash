@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Uncomment if you want to use extended glob patterns
+# shopt -qs extglob
+
+# ebash's main code
+
+autoupdate="$(cat $HOME/.ebash/.cfg | grep 'autoup' | cut -d '=' -f2)"
+repo="$(find $HOME -type d -name "ebash" 2>/dev/null | grep repo)"
+[[ ! -e "$HOME"/.ebash ]] && mkdir "$HOME/.ebash" && "$repo/install"
+
+# Check for unit test
+if [[ "$EBASH_TST" == "true" ]]; then
+	# Load the lib from the repo and set prgroot to repo
+	echo -e "[EBASH] UNIT TEST MODE! READING FROM REPO!"
+	source "$repo"/.ebash/.lib
+	prgroot="$repo/.ebash"
+elif [[ "$autoupdate" == "true" ]]; then
+	# Check for updates
+	if [[ -n "$(diff "$repo"/.ebash/.lib "$HOME"/.ebash/.lib)" || -n "$(diff "$repo"/.ebash/help "$HOME"/.ebash/help)" || -n "$(diff "$repo"/.ebash/version "$HOME"/.ebash/version)" || -n "$(diff "$repo"/ebash "$HOME"/bin/ebash)" ]]; then "$repo/install"; fi
+	
+	# Load lib
+	source "$HOME"/.ebash/.lib
+else
+	source "$HOME"/.ebash/.lib
+fi
+
+
+__ebash() {
+	if [[ -z "$1" ]]; then
+		__args
+	else
+		# Verbose precheck (removed from args/commands)
+		[[ "$1" =~ ^(-V|--verbose|verbose)$ ]] && { VERBOSE=true; shift; }
+		if [[ "$1" =~ "-" ]]; then
+			# Arg mode
+			__args "$@"
+		elif [[ "$1" =~ ${lists[cmds]} ]]; then
+			# Command mode
+			__cmds "$@"
+		else
+			# File execution mode
+			__short "$@"
+		fi
+	fi
+	__proc2bash
+}
+
+__ebash "$@"
+#shopt -qu extglob # Shouldn't need this as shopt stays specific to the subshell, uncomment if sourcing to parent
+
+# Cleanup for accidental sourcing
+[[ "$$" -eq "$BASHPID" ]] && unset __ebash __args __cwd autoupdate repo prgroot __loadcfg __cfg error verbose log lists __cmds states
