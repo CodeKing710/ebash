@@ -43,7 +43,7 @@ states[cfg]=""
 states[proc]=""
 
 # Add commands to the regex string below, separated by '|'
-lists[cmds]="^(config|verbose|help|version)$"
+lists[cmds]="^(process|config|help|version)$"
 
 error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"$1" >&2; }
 verbose() { [[ -n "$VERBOSE" ]] && echo -e '\e[0;1;35m[VERBOSE]\e[0;0;0m '"$1"; }
@@ -131,12 +131,18 @@ __cmds() {
 		esac
 	shift; done
 }
+__short() {
+	# Process short options
+	states[file]="$1"
+}
 __proc2bash() {
 	# Read file
 	local genbash="$(cat "${states[file]}")"
 
 	# Process extended syntaxes into bash equivalents
-	genbash=$(echo -E "$genbash" | grep -E '[^.]+[[:space:]]==[[:space:]]\{[[^.]+]+\|[[^.]+]+\}')
+	verbose "Prefile first few lines: "
+	echo -E "$genbash" | head -8
+	genbash=$(echo -E "$genbash" | grep -E '["?[^.]*"?]+ [!]?== \{["?[^.]*"?]+\|["?[^.]*"?]+\}')
 	verbose "Grep capture for \`X == {A|B}\`: $genbash"
 	exit
 	# Capture X == {A|B}; Replace with X == A || X == B
