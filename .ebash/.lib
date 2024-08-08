@@ -141,15 +141,26 @@ __proc2bash() {
 
 	# Process extended syntaxes into bash equivalents
 	verbose "First few lines: ""$(echo -E "$genbash" | head -8)"
-	# genbash=$(echo -E "$genbash" | grep -E '["?[^.]*"?]+ [!]?== \{["?[^.]*"?]+\|["?[^.]*"?]+\}')
-	verbose "Grep capture for \`X == {A|B}\`: $genbash"
-	exit
 	# Capture X == {A|B}; Replace with X == A || X == B
 	# Steps:
 	# 1. Capture X based on surrounding syntax
 	# 2. Capture A and B separately
 	# 3. Replace {A|B} with A || X == B (Adjusting '|' for '&' when necessary)
 	# 4. Do this until the list within {} is complete (i.e. {A|B&C...})
+	local left_op="$(echo -E "$genbash" | grep -Eo '\s\"?[^.]*\"?\s[=|\!|\-]' | cut -d' ' -f2)"
+	local operator="$(echo -E "$genbash" | grep -Eo '\s[=|\!|\-][=|~]\s' | sed -e 's/ //g')"
+	local right_op="$(echo -E "$genbash" | grep -Eo '\{\"?.*\"?\}' | sed -e 's/{//g' -e 's/}//g')"
+	local separator="$(echo "$right_op" | grep -Eo '[\||\&]')"
+	verbose "Left operand: $left_op"
+	verbose "Operator: $operator"
+	verbose "Right operand: $right_op"
+	verbose "Comparison List separator: $separator"
+	
+	# Build out the new expression that will replace the right-operand
+	local rep_expr="$(echo "$right_op" | cut -d"$separator" -f1) "\\$separator\\$separator" $left_op $operator $(echo "$right_op" | cut -d"$separator" -f2)"
+	verbose "Replacement expression: $rep_expr"
+	genbash="$(echo -E "$genbash" | sed -e "s/{.*}/$rep_expr/")"
+	verbose "New expression: $genbash"
 
 	# Push generated bash to output file (same name minus extension)
 	echo -E "$genbash" > "${states[file]/.ebsh/}"
