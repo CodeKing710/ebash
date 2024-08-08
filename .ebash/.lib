@@ -45,9 +45,9 @@ states[proc]=""
 # Add commands to the regex string below, separated by '|'
 lists[cmds]="^(process|config|help|version)$"
 
-error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"$1" >&2; }
-verbose() { [[ -n "$VERBOSE" ]] && echo -e '\e[0;1;35m[VERBOSE]\e[0;0;0m '"$1"; }
-log() { echo -e '\e[0;1;32m[EBASH]\e[0;0;0m '"$1"; }
+error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"$@" >&2; }
+verbose() { [[ -n "$VERBOSE" ]] && echo -e '\e[0;1;35m[VERBOSE]\e[0;0;0m '"$@"; }
+log() { echo -e '\e[0;1;32m[EBASH]\e[0;0;0m '"$@"; }
 
 __args() {
 	# Process args
@@ -140,12 +140,16 @@ __proc2bash() {
 	local genbash="$(cat "${states[file]}")"
 
 	# Process extended syntaxes into bash equivalents
-	verbose "Prefile first few lines: "
-	echo -E "$genbash" | head -8
-	genbash=$(echo -E "$genbash" | grep -E '["?[^.]*"?]+ [!]?== \{["?[^.]*"?]+\|["?[^.]*"?]+\}')
+	verbose "First few lines: ""$(echo -E "$genbash" | head -8)"
+	# genbash=$(echo -E "$genbash" | grep -E '["?[^.]*"?]+ [!]?== \{["?[^.]*"?]+\|["?[^.]*"?]+\}')
 	verbose "Grep capture for \`X == {A|B}\`: $genbash"
 	exit
 	# Capture X == {A|B}; Replace with X == A || X == B
+	# Steps:
+	# 1. Capture X based on surrounding syntax
+	# 2. Capture A and B separately
+	# 3. Replace {A|B} with A || X == B (Adjusting '|' for '&' when necessary)
+	# 4. Do this until the list within {} is complete (i.e. {A|B&C...})
 
 	# Push generated bash to output file (same name minus extension)
 	echo -E "$genbash" > "${states[file]/.ebsh/}"
