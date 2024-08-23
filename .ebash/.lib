@@ -147,9 +147,9 @@ __proc2bash() {
 	# 2. Capture A and B separately
 	# 3. Replace {A|B} with A || X == B (Adjusting '|' for '&' when necessary)
 	# 4. Do this until the list within {} is complete (i.e. {A|B&C...})
-	local left_op="$(echo -E "$genbash" | grep -Eo '\s\"?[^.]*\"?\s[=|\!|\-]' | cut -d' ' -f2)"
-	local operator="$(echo -E "$genbash" | grep -Eo '\s[=|\!|\-][=|~]\s' | sed -e 's/ //g')"
-	local right_op="$(echo -E "$genbash" | grep -Eo '\{\"?.*\"?\}' | sed -e 's/{//g' -e 's/}//g')"
+	local left_op="$(echo -E "$genbash" | grep -Eo '\s\"?[^.]*\"?\s[=|\!|\-]' | head -1 | cut -d' ' -f2)"
+	local operator="$(echo -E "$genbash" | grep -Eo '\s[=|\!|\-][=|~]\s' | head -1 | sed -e 's/\s//g')"
+	local right_op="$(echo -E "$genbash" | grep -Eo '\{\"?.*\"?\}' | head -1 | sed -e 's/{//g' -e 's/}//g')"
 	local separator="$(echo "$right_op" | grep -Eo '[\||\&]')"
 	verbose "Left operand: $left_op"
 	verbose "Operator: $operator"
@@ -159,7 +159,7 @@ __proc2bash() {
 	# Build out the new expression that will replace the right-operand
 	local rep_expr="$(echo "$right_op" | cut -d"$separator" -f1) "\\$separator\\$separator" $left_op $operator $(echo "$right_op" | cut -d"$separator" -f2)"
 	verbose "Replacement expression: $rep_expr"
-	genbash="$(echo -E "$genbash" | sed -e "s/{.*}/$rep_expr/")"
+	genbash="$(echo -E "$genbash" | sed -e 's/{.*}/'"$rep_expr"'/')"
 	verbose "New expression: $genbash"
 
 	# Push generated bash to output file (same name minus extension)
@@ -171,7 +171,7 @@ __proc2bash() {
 		log "File location: ${states[file]/.ebsh/}"
 		exit
 	} || {
-		source "${states[file]/.ebsh/}"
+		source "./${states[file]/.ebsh/}"
 		exit
 	}
 }
