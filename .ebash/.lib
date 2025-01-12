@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ebash's Functions and Variables
 
@@ -68,9 +68,6 @@ __args() {
 				log "Resetting ebash to default configuration..."
 				cp -rf $(find "$HOME" -type d -name ebash 2>/dev/null | head -1)/.ebash "$HOME/" && echo "ebash's config has been reset!" || error "Failed to reset defaults!"
 				exit;;
-			# -V | --verbose )
-			# 	VERBOSE=true
-			#		;;
 			-\? | --help )
 				# Not using -h to leave it open for other possible args
 				cat "$prgroot/help"
@@ -107,9 +104,6 @@ __cmds() {
 			@(config) )
 				states[cfg]="t"
 				;;
-			# @(verbose) )
-			# 	VERBOSE=true
-			# 	;;
 			@(help) )
 				cat "$prgroot/help"
 				exit;;
