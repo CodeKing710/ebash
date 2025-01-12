@@ -6,23 +6,29 @@ shopt -qs extglob
 # ebash's main code
 
 autoupdate="$(cat $HOME/.ebash/.cfg | grep 'autoup' | cut -d '=' -f2)"
-repo="$(find $HOME -type d -name "ebash" 2>/dev/null | grep repo)"
-[[ ! -e "$HOME"/.ebash ]] && mkdir "$HOME/.ebash" && "$repo/install"
+[[ ! -e "$HOME/.ebash" ]] && { mkdir "$HOME/.ebash"; "$repo/install"; }
+
+if (( autoupdate )); then
+	if [[ -e "$HOME/repos/ebash" ]]; then
+		repo="$HOME/repos/ebash"
+	else
+		repo="$(find "$HOME" -type d -name ebash 2>/dev/null)"
+	fi
+
+	# Check for updates
+	if [[ -n "$(diff "$repo/.ebash/.lib" "$HOME/.ebash/.lib")" || -n "$(diff "$repo/.ebash/help" "$HOME/.ebash/help")" || -n "$(diff "$repo/.ebash/version" "$HOME/.ebash/version")" || -n "$(diff "$repo/ebash" "$HOME/bin/ebash")" ]]; then
+		"$repo/install"
+	fi
+fi
 
 # Check for unit test
 if [[ "$EBASH_TST" == "true" ]]; then
 	# Load the lib from the repo and set prgroot to repo
 	echo -e "[EBASH] UNIT TEST MODE! READING FROM REPO!"
-	source "$repo"/.ebash/.lib
+	source "$repo/.ebash/.lib"
 	prgroot="$repo/.ebash"
-elif [[ "$autoupdate" == "true" ]]; then
-	# Check for updates
-	if [[ -n "$(diff "$repo"/.ebash/.lib "$HOME"/.ebash/.lib)" || -n "$(diff "$repo"/.ebash/help "$HOME"/.ebash/help)" || -n "$(diff "$repo"/.ebash/version "$HOME"/.ebash/version)" || -n "$(diff "$repo"/ebash "$HOME"/bin/ebash)" ]]; then "$repo/install"; fi
-	
-	# Load lib
-	source "$HOME"/.ebash/.lib
 else
-	source "$HOME"/.ebash/.lib
+	source "$HOME/.ebash/.lib"
 fi
 
 
